@@ -1,29 +1,52 @@
-import rlp from 'rlp'
-import hashes from 'js-sha3'
-import { utils as etils, Wallet } from 'ethers'
+import { utils as etils, Wallet } from 'ethers';
 
-const ustr = etils.toUtf8String
+const ustr = etils.toUtf8String;
+const ubye = etils.toUtf8Bytes;
+const ucat = etils.concat;
+const aray = etils.arrayify;
 
-export function roll(v) {
-    return rlp.encode(v)
-}
+// For simplicity, all functions below should take and return Uint8Array.
+const verifyIns = function verifyIns(...args) {
+	args.forEach(x => {
+		if (!(x instanceof Uint8Array)) throw new Error(`Arguments must be Uint8Array:\n ${x}`);
+	});
+};
 
-export function hash(b) {
-    return hashes.keccak256(b)
-}
+const pkey = function pkey(skey) {
+	verifyIns(skey);
+	return ubye(etils.computePublicKey(ustr(skey)));
+};
 
-// Return EIP-191 signature as string, expect message and private key.
+ // Return the EIP-191 personal message digest of message.
+ // https://docs.ethers.io/v5/api/utils/hashing/#utils-hashMessage
+const eip191Digest = function eip191Digest(msg) {
+	verifyIns(msg);
+	return ubye( etils.hashMessage(ustr(msg)) );
+};
+
+// Return EIP-191 signature.
 // https://docs.ethers.io/v5/api/signer/#Signer-signMessage
-export async function sign(msg, key) {
-    if ( !(msg instanceof Uint8Array) || !(key instanceof Uint8Array) ) throw new Error("Message must be a Uint8Array.")
-    return (new Wallet(ustr(key))).signMessage(msg)
-}
+const eip191Sign = async function eip191Sign(msg, key) {
+	verifyIns(msg, key);
+	return ubye( await (new Wallet(ustr(key))).signMessage(msg) );
+};
 
-// Return public key as is, only if public key is verified to have signed message. Throw an error otherwise.
-export function scry(msg, key, sig) {
-    if ( !(msg instanceof Uint8Array) || !(key instanceof Uint8Array)) throw new Error("Message and key must be Uint8Array.")
-    const digest = etils.hashMessage(ustr(msg))
-    const recovered_key = etils.recoverPublicKey(etils.arrayify(digest), sig)
-    if ( ustr(key) !== recovered_key ) throw new Error("Recovered public key and input public key do not match.")
-    return key
-}
+// Return public key as is, only if public key is verified to have (EIP191) signed message. Throw an error otherwise.
+const eip191Scry = function eip191Scry(msg, key, sig) {
+	verifyIns(msg, key, sig);
+	const digest = ustr(eip191Digest(msg));
+	const recovered_key = etils.recoverPublicKey(aray(digest), ustr(sig));
+	if (ustr(key) !== recovered_key) throw new Error("Recovered public key and input public key do not match.");
+	return key;
+};
+
+export {
+	ustr,
+	ubye,
+	ucat,
+	aray,
+	pkey,
+	eip191Digest,
+	eip191Sign,
+	eip191Scry
+};
