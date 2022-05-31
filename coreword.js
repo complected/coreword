@@ -17,18 +17,18 @@ const pkey = function pkey(skey) {
 	return ubye(etils.computePublicKey(ustr(skey)));
 };
 
- // Return the EIP-191 personal message digest of message.
- // https://docs.ethers.io/v5/api/utils/hashing/#utils-hashMessage
+// Return the EIP-191 personal message digest of message.
+// https://docs.ethers.io/v5/api/utils/hashing/#utils-hashMessage
 const eip191Digest = function eip191Digest(msg) {
 	verifyIns(msg);
-	return ubye( etils.hashMessage(ustr(msg)) );
+	return ubye(etils.hashMessage(ustr(msg)));
 };
 
 // Return EIP-191 signature.
 // https://docs.ethers.io/v5/api/signer/#Signer-signMessage
 const eip191Sign = async function eip191Sign(msg, key) {
 	verifyIns(msg, key);
-	return ubye( await (new Wallet(ustr(key))).signMessage(msg) );
+	return ubye(await (new Wallet(ustr(key))).signMessage(msg));
 };
 
 // Return public key as is, only if public key is verified to have (EIP191) signed message. Throw an error otherwise.
