@@ -11,7 +11,7 @@ test('eip191Scry', async _ => {
     async t => {
       const msg = ubye(msg_str);
       const sig = await eip191Sign(msg, sk);
-      t.equal(eip191Scry(msg, pk, sig), pk);
+      t.deepEqual(eip191Scry(msg, pk, sig), pk);
     }
   );
   verify("What is real? That which is irreplacable.");
