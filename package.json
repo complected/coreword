@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "ethers": "^5.6.8"
+    "@stablelib/utf8": "^1.0.1",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "tapzero": "^0.6.1"

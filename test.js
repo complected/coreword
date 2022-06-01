@@ -1,21 +1,30 @@
 import { test } from 'tapzero';
+import nacl from 'tweetnacl';
+import utf8 from '@stablelib/utf8';
+import { sign, scry } from './coreword.js';
 
-import { eip191Scry, eip191Sign, ubye, pkey } from './coreword.js';
+const { publicKey: pk, secretKey: sk } = nacl.sign.keyPair();
 
-const sk = ubye("0x309a49dcda67245af724a05ff081b0c5d24ec0b87a1393d940de6c1dd60f45a3");
-const pk = pkey(sk);
-
-test('eip191Scry', async _ => {
-  const verify = msg_str => test(
-    String.raw`${msg_str}:`,
-    async t => {
-      const msg = ubye(msg_str);
-      const sig = await eip191Sign(msg, sk);
-      t.deepEqual(eip191Scry(msg, pk, sig), pk);
+test('scry', _ => {
+  const verify = str => test(
+    String.raw`${str}:`,
+    t => {
+      const msg = utf8.encode(str);
+      const sig = sign(msg, sk);
+      t.deepEqual(scry(msg, sig, pk), pk);
     }
   );
-  verify("What is real? That which is irreplacable.");
-  verify("");
-  verify("\\n");
-  verify(String.raw`"\\u0024"`);
+  [
+    "1",
+    "What is real? That which is irreplacable.",
+    "",
+    "\\n",
+    String.raw`"\\u0024"`
+  ].forEach(s => verify(s));
+});
+
+test('bad signature', t => {
+  const msg = utf8.encode("1");
+  const badSig = new Uint8Array(Array(64).fill(0))
+  t.throws(_ => scry(msg, badSig, pk), /Invalid signature/);
 });
