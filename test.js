@@ -26,8 +26,7 @@ test("Sign message and recover public key", async _ => {
     async t => {
       const msg = utf8.encode(str);
       const rsv = await sign(msg, sk); // r + s + v
-      const [sig, recovery] = [rsv.slice(0, -1), rsv[64]];
-      t.deepEqual(scry(msg, sig, recovery), pk);
+      t.deepEqual(scry(msg, rsv, recovery), pk);
     }
   ));
 });
@@ -52,7 +51,7 @@ test("Differentially test against Ethers.js", _ => {
       t.deepEqual(ndigest, edigest);
 
       // T: signature
-      // Know that ECDSA signing is non-deterministic, the recovery bit varies.
+      // Know that the recovery bit varies.
 
       // ethers
       const ersv = etils.arrayify(etils.joinSignature(signKey.signDigest(edigest)));
@@ -84,17 +83,18 @@ test("Differentially test against Ethers.js", _ => {
       // ethers
       /*
       Ethers branches on the length of the signature. If it was 64 byte, it assumes EIP2098 Compact Representation,
-      we want to use canonical siganture.
+      we want to use canonical signature.
       https://github.com/ethers-io/ethers.js/blob/fc1e006575d59792fa97b4efb9ea2f8cca1944cf/packages/bytes/lib/index.js#L302 
 
-      Therefore I pass in ersv to recoverPublicKey instead of esig:
+      Therefore I pass in `ersv` to `recoverPublicKey` instead of `esig`:
       "The Compact Representation does not collide with canonical signature as it uses 2 parameters (r, yParityAndS)
       and is 64 bytes long while canonical signatures involve 3 separate parameters (r, s, yParity) and are 65 bytes long."
       https://eips.ethereum.org/EIPS/eip-2098
       */
       const epkUncompressed = etils.arrayify(etils.recoverPublicKey(etils.arrayify(edigest), ersv));
-      // compressed pk's prefix is ether 0x02 or 0x03 and non-deterministic, so we don't compare it. https://en.bitcoin.it/wiki/Elliptic_Curve_Digital_Signature_Algorithm
-      // compressed key is the slice(1, 33) of uncompressed.
+      // compressed pk's prefix is ether 0x02 or 0x03. https://en.bitcoin.it/wiki/Elliptic_Curve_Digital_Signature_Algorithm
+      // compressed key is the slice(0, 33) of uncompressed.
+      // Since the prefix is returned from noble/secp256k1 i.e. we don't control the value, we don't compare it i.e. slice(1, ...).
       t.deepEqual(npk.slice(1), epkUncompressed.slice(1, 33));
     }
   ))
@@ -107,5 +107,3 @@ test('bad signature', t => {
 });
 
 // sign(utf8.encode(""), sk) // should throw when creating BigInt (a lib that backs Noble) out of 0x
-
-// Primer on ECDSA: https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/
