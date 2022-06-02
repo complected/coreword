@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "@stablelib/utf8": "^1.0.1",
-    "tweetnacl": "^1.0.3"
+    "@noble/secp256k1": "^1.5.5",
+    "@stablelib/utf8": "^1.0.1"
   },
   "devDependencies": {
+    "ethers": "^5.6.8",
     "tapzero": "^0.6.1"
   }
 }
