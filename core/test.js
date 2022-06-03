@@ -20,7 +20,7 @@ const testcases = [
     "!@#$",
     // Note that `length` is defined as number of UTF-16 codepoints.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
-    "α", 
+    "α",
     String.raw`⛓️👷‍♂️🏙️👨‍👨‍👧‍👧`,
 ]
 
@@ -29,8 +29,9 @@ test("Sign message and recover public key", async _ => {
         String.raw`${str}:`,
         async t => {
             const msg = Buffer.from(str)
-            const rsv = await sign(msg, sk) // r + s + v
-            const recoverdPk = scry(msg, rsv)
+            const dig = hash(msg)
+            const rsv = await sign(dig, sk) // r + s + v
+            const recoverdPk = scry(dig, rsv)
             t.deepEqual(recoverdPk, Buffer.from(pk))
         }
     ))
@@ -61,7 +62,7 @@ test("Differentially test against Ethers.js", _ => {
             const [nrs, nrecovery] = [nrsv.slice(0, 64), nrsv[64]]
 
             // ethers
-            // Again, ersv = r + s + v 
+            // Again, ersv = r + s + v
             const ersv = etils.arrayify(etils.joinSignature(signKey.signDigest(edigest)))
             const ers = Buffer.from(ersv.slice(0, 64))
             // Normalize the v bit: "the yParity parameter is always either 0 or 1 (canonically the values used have historically been 27 and 28..."
@@ -110,8 +111,9 @@ test("Differentially test against Ethers.js", _ => {
 
 test('bad signature', t => {
     const msg = Buffer.from("1")
+    const dig = hash(msg)
     const badSig = new Uint8Array(Array(64).fill(0))
-    t.throws(_ => scry(msg, badSig), /Invalid Signature/)
+    t.throws(_ => scry(dig, badSig), /Invalid Signature/)
 })
 
 // Expect Syntax error. Can't test at test time without weird hacks, hence commenting it out.

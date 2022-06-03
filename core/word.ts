@@ -32,14 +32,14 @@ function hash(b : Blob) : Hash {
 }
 
 // Return r, s, and v concatenated.
-async function sign(msg: Blob, key: Seck, opts: any = { fake: false }): Promise<Sign> {
-    const [sig, recovery] = await secp.sign(msg, key, { recovered: true, der: false })
+async function sign(dig: Hash, key: Seck): Promise<Sign> {
+    const [sig, recovery] = await secp.sign(dig, key, { recovered: true, der: false })
     return Buffer.concat([sig, Buffer.from([recovery])])
 }
 
 // Return (compressed) public key.
-function scry(msg : Blob, sig : Sign, opts : any = {fake:false}) : Pubk {
-    return Buffer.from(secp.recoverPublicKey(msg, sig.slice(0, 64), sig[64], true))
+function scry(dig : Hash, sig : Sign) : Pubk {
+    return Buffer.from(secp.recoverPublicKey(dig, sig.slice(0, 64), sig[64], true))
 }
 
 
