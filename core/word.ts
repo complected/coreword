@@ -43,10 +43,15 @@ function scry(msg : Blob, sig : Sign, opts : any = {fake:false}) : Pubk {
 }
 
 
-type Okay<T> = T | Error
+type Okay<T> = [true, T] | [false, Why]
+type Why     = [Error, Why?]
 
-function fail(desc:string) : Error {
-    return new Error(desc)
+function okay(v:any) : Okay<any> {
+    return [true, v]
+}
+
+function fail(desc:string, prev?:Why) : Okay<any> {
+    return [false, [new Error(desc), prev]]
 }
 
 function toss(desc:string) {
