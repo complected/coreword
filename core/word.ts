@@ -2,6 +2,7 @@ import rlp from 'rlp'
 import hashes from 'js-sha3'
 import * as secp from "@noble/secp256k1"
 
+
 type Blob = Buffer
 type Roll = Blob | Roll[]
 type Hash = Blob // 32 bytes
@@ -9,6 +10,7 @@ type Pubk = Blob // 33 bytes. test.js [8]
 type Seck = Blob // 32 bytes. test.js [9]
 type Sign = Blob // 65 bytes. test.js [7]
 type Hexs = string // hex string
+
 
 export function blob(hex : Hexs) : Blob {
     return Buffer.from(hex, 'hex')
