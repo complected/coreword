@@ -23,20 +23,20 @@ export function hash(b : Blob) : Hash {
 }
 
 // Return r, s, and v concatenated.
-export async function sign(msg: Blob, key: Seck, opts: any = { fake: false }): Promise<Sign> {
+export async function sign(digest: Hash, key: Seck, opts: any = { fake: false }): Promise<Sign> {
     if (opts.fake === true) {
         return Buffer.from('fakes'.repeat(13)) // 65 bytes
     } else {
-        const [sig, recovery] = await secp.sign(msg, key, { recovered: true, der: false })
+        const [sig, recovery] = await secp.sign(digest, key, { recovered: true, der: false })
         return Buffer.concat([sig, Buffer.from([recovery])])
     }
 }
 
 // Return (compressed) public key.
-export function scry(msg : Blob, sig : Sign, opts : any = {fake:false}) : Pubk {
+export function scry(digest : Hash, sig : Sign, opts : any = {fake:false}) : Pubk {
     if (opts.fake === true) {
         return Buffer.concat([Buffer.from([0x0]), Buffer.from('pubk'.repeat(8))]) // 33 bytes
     } else {
-	    return Buffer.from(secp.recoverPublicKey(msg, sig.slice(0, 64), sig[64], true))
+	    return Buffer.from(secp.recoverPublicKey(digest, sig.slice(0, 64), sig[64], true))
     }
 }

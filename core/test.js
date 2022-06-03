@@ -22,15 +22,19 @@ const testcases = [
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
     "α", 
     String.raw`⛓️👷‍♂️🏙️👨‍👨‍👧‍👧`,
+    // About 10x lower than current V8 max string length, 2 ^ 29.
+    // This is to stress test the code. You can crash the test before 2 ^ 29, but that's due to running out of heap space because of copying the string multiple times through function calls IMO.
+    // https://stackoverflow.com/questions/44533966/v8-node-js-increase-max-allowed-string-length#:~:text=In%20summer%202017%2C%20V8%20increased,25%20on%2064%2Dbit%20platforms.
+    "1".repeat(2 ** 26) 
 ]
 
 test("Sign message and recover public key", async _ => {
     testcases.forEach(str => test(
-        String.raw`${str}:`,
+        String.raw`${str.length < 2** 10 ? str : "VERY LONG STRING"}:`,
         async t => {
-            const msg = Buffer.from(str)
-            const rsv = await sign(msg, sk) // r + s + v
-            const recoverdPk = scry(msg, rsv)
+            const digest = hash(Buffer.from(str))
+            const rsv = await sign(digest, sk)           // r + s + v
+            const recoverdPk = scry(digest, rsv)
             t.deepEqual(recoverdPk, Buffer.from(pk))
         }
     ))
@@ -38,7 +42,7 @@ test("Sign message and recover public key", async _ => {
 
 test("Differentially test against Ethers.js", _ => {
     testcases.forEach(str => test(
-        String.raw`${str}:`,
+        String.raw`${str.length < 2** 10 ? str : "VERY LONG STRING"}:`,
         async t => {
             // noble
             const nprefix = "\x19Ethereum Signed Message:\n"
