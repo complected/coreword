@@ -37,6 +37,6 @@ export function scry(msg : Blob, sig : Sign, opts : any = {fake:false}) : Pubk {
     if (opts.fake === true) {
         return Buffer.concat([Buffer.from([0x0]), Buffer.from('pubk'.repeat(8))]) // 33 bytes
     } else {
-	    return Buffer.from(secp.recoverPublicKey(msg, sig.slice(0, 64), sig[64], true)) // TODO: WIP
+	    return Buffer.from(secp.recoverPublicKey(msg, sig.slice(0, 64), sig[64], true))
     }
 }
