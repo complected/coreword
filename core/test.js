@@ -22,11 +22,13 @@ const testcases = [
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
     "α",
     String.raw`⛓️👷‍♂️🏙️👨‍👨‍👧‍👧`,
+    // About 10x lower than current V8 max string length, 2 ^ 29. [10]
+    "1".repeat(2 ** 26) 
 ]
 
 test("Sign message and recover public key", async _ => {
     testcases.forEach(str => test(
-        String.raw`${str}:`,
+        String.raw`${str.length < 2 ** 10 ? str : "VERY LONG STRING"}:`,
         async t => {
             const msg = Buffer.from(str)
             const dig = hash(msg)
@@ -39,13 +41,14 @@ test("Sign message and recover public key", async _ => {
 
 test("Differentially test against Ethers.js", _ => {
     testcases.forEach(str => test(
-        String.raw`${str}:`,
+        String.raw`${str.length < 2 ** 10 ? str : "VERY LONG STRING"}:`,
         async t => {
             // noble
             const nprefix = "\x19Ethereum Signed Message:\n"
             const nEIP191Encode = s => new Uint8Array([
                 ...Buffer.from(nprefix),
-                ...Buffer.from(String(Buffer.from(s).length)), // JS strings' length are UTF16 based
+                // A JS string's length is UTF16 based.
+                ...Buffer.from(String(Buffer.from(s).length)), 
                 ...Buffer.from(s)
             ])
             const ndigest = hash(nEIP191Encode(str))
@@ -123,16 +126,28 @@ test('bad signature', t => {
 # References: to document links and gotchas
 
 1. https://github.com/paulmillr/noble-secp256k1
+
 2. https://blog.cloudflare.com/a-relatively-easy-to-understand-primer-on-elliptic-curve-cryptography/
+
 3. comments in test.js
+
 4. rabbit hole: https://ethereum.github.io/yellowpaper/paper.pdf
+
 5. https://github.com/ethereumbook/ethereumbook/blob/develop/06transactions.asciidoc#transaction-signing-in-practice
+
 6. In Bitcoin, public keys are either compressed or uncompressed. Compressed public keys are 33 bytes,
 consisting of a prefix either 0x02 or 0x03, and a 256-bit integer called x. The older uncompressed keys are 65 bytes,
 consisting of constant prefix (0x04), followed by two 256-bit integers called x and y (2 * 32 bytes).
 The prefix of a compressed key allows for the y value to be derived from the x value.
 https://en.bitcoin.it/wiki/Elliptic_Curve_Digital_Signature_Algorithm
+
 7. Same as Ethers' Raw Signature, 65 bytes = 32 (r) + 32 (s) + 1 (v). https://docs.ethers.io/v5/api/utils/bytes/#Signature
+
 8. See (6) and (T: public key) in the test.
+
 9. Private key returned by Noble and tested is 32 bytes: https://github.com/paulmillr/noble-secp256k1#utilities
+
+10. This is to stress test the code. You can crash the test before 2 ^ 29.
+But that's due to running out of heap space, because of copying the string multiple times through function calls IMO.
+https://stackoverflow.com/questions/44533966/v8-node-js-increase-max-allowed-string-length#:~:text=In%20summer%202017%2C%20V8%20increased,25%20on%2064%2Dbit%20platforms.
 */
